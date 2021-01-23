@@ -92,6 +92,51 @@ namespace StockAnalyzer.Windows
 
             #endregion
             #region Parallel and Asynchronous Programming
+            //var stocks = new Dictionary<string, IEnumerable<StockPrice>>
+            //{
+            //    { "MSFT", Generate("MSFT") },
+            //    { "GOOGL", Generate("GOOGL") },
+            //    { "PS", Generate("PS") },
+            //    { "AMAZ", Generate("AMAZ") }
+            //};
+
+            ////Thread Safe that allows data to be added
+            //var bag = new ConcurrentBag<StockCalculation>();
+
+            //// Note, by using the task we have now reduced the number of threads available
+            //var complete = await Task.Run(() =>
+            //{
+
+            //    Parallel.Invoke(
+            //            // MaxDegreeOfParallelism used to control number of cores
+            //            //   new ParallelOptions { MaxDegreeOfParallelism = 4},
+            //            () =>
+            //            {
+            //                var msft = Calculate(stocks["MSFT"]);
+            //                bag.Add(msft);
+            //            },
+            //            () =>
+            //            {
+            //                var googl = Calculate(stocks["GOOGL"]);
+            //                bag.Add(googl);
+            //            },
+            //            () =>
+            //            {
+            //                var ps = Calculate(stocks["PS"]);
+            //                bag.Add(ps);
+            //            },
+            //            () =>
+            //            {
+            //                var amaz = Calculate(stocks["AMAZ"]);
+            //                bag.Add(amaz);
+            //            });
+
+            //    return bag;
+            //});
+            //Stocks.ItemsSource = bag;
+
+            #endregion
+            #region Handling Exceptions
             var stocks = new Dictionary<string, IEnumerable<StockPrice>>
             {
                 { "MSFT", Generate("MSFT") },
@@ -103,36 +148,49 @@ namespace StockAnalyzer.Windows
             //Thread Safe that allows data to be added
             var bag = new ConcurrentBag<StockCalculation>();
 
-            // Note, by using the task we have now reduced the number of threads available
-            var complete = await Task.Run(() =>
+            try
+            {
+                var complete = await Task.Run(() =>
+                {
+
+                    Parallel.Invoke(
+                            // MaxDegreeOfParallelism used to control number of cores
+                            //   new ParallelOptions { MaxDegreeOfParallelism = 4},
+                            () =>
+                            {
+                                var msft = Calculate(stocks["MSFT"]);
+                                bag.Add(msft);
+                                throw new Exception("MSFT");
+                            },
+                            () =>
+                            {
+                                var googl = Calculate(stocks["GOOGL"]);
+                                bag.Add(googl);
+                                throw new Exception("GOOGL");
+                            },
+                            () =>
+                            {
+                                var ps = Calculate(stocks["PS"]);
+                                bag.Add(ps);
+                                 
+                            },
+                            () =>
+                            {
+                                var amaz = Calculate(stocks["AMAZ"]);
+                                bag.Add(amaz);
+                                
+                            });
+
+                    return bag;
+                });
+            }
+            catch (Exception ex)
             {
 
-                Parallel.Invoke(
-                        // MaxDegreeOfParallelism used to control number of cores
-                        //   new ParallelOptions { MaxDegreeOfParallelism = 4},
-                        () =>
-                        {
-                            var msft = Calculate(stocks["MSFT"]);
-                            bag.Add(msft);
-                        },
-                        () =>
-                        {
-                            var googl = Calculate(stocks["GOOGL"]);
-                            bag.Add(googl);
-                        },
-                        () =>
-                        {
-                            var ps = Calculate(stocks["PS"]);
-                            bag.Add(ps);
-                        },
-                        () =>
-                        {
-                            var amaz = Calculate(stocks["AMAZ"]);
-                            bag.Add(amaz);
-                        });
-
-                return bag;
-            });
+                throw;
+            }
+            // Note, by using the task we have now reduced the number of threads available
+           
             Stocks.ItemsSource = bag;
 
             #endregion
