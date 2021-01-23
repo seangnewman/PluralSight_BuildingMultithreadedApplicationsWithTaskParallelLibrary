@@ -25,10 +25,29 @@ namespace StockAnalyzer.Windows
         }
 
 
-        private  void Search_Click(object sender, RoutedEventArgs e)
+        private  async void  Search_Click(object sender, RoutedEventArgs e)
         {
             BeforeLoadingStockData();
             #region A Problem to Solve in Parallel
+            //var stocks = new Dictionary<string, IEnumerable<StockPrice>>
+            //{
+            //    { "MSFT", Generate("MSFT") },
+            //    { "GOOGL", Generate("GOOGL") },
+            //    { "PS", Generate("PS") },
+            //    { "AMAZ", Generate("AMAZ") }
+            //};
+
+            //var msft = Calculate(stocks["MSFT"]);
+            //var googl = Calculate(stocks["GOOGL"]);
+            //var ps = Calculate(stocks["PS"]);
+            //var amaz = Calculate(stocks["AMAZ"]);
+
+            //Stocks.ItemsSource = new[] { msft, googl, ps, amaz };
+
+
+            #endregion
+
+            #region First Parallel Operation
             var stocks = new Dictionary<string, IEnumerable<StockPrice>>
             {
                 { "MSFT", Generate("MSFT") },
@@ -37,12 +56,38 @@ namespace StockAnalyzer.Windows
                 { "AMAZ", Generate("AMAZ") }
             };
 
-            var msft = Calculate(stocks["MSFT"]);
-            var googl = Calculate(stocks["GOOGL"]);
-            var ps = Calculate(stocks["PS"]);
-            var amaz = Calculate(stocks["AMAZ"]);
+            //Thread Safe that allows data to be added
+            var bag = new ConcurrentBag<StockCalculation>();
+            var complete = await Task.Run(() =>
+            {
 
-            Stocks.ItemsSource = new[] { msft, googl, ps, amaz };
+            Parallel.Invoke(
+                // MaxDegreeOfParallelism used to control number of cores
+                 //   new ParallelOptions { MaxDegreeOfParallelism = 4},
+                    () =>
+                    {
+                        var msft = Calculate(stocks["MSFT"]);
+                        bag.Add(msft);
+                    },
+                    () =>
+                    {
+                        var googl = Calculate(stocks["GOOGL"]);
+                        bag.Add(googl);
+                    },
+                    () =>
+                    {
+                        var ps = Calculate(stocks["PS"]);
+                        bag.Add(ps);
+                    },
+                    () =>
+                    {
+                        var amaz = Calculate(stocks["AMAZ"]);
+                        bag.Add(amaz);
+                    });
+
+                return bag;
+            });
+            Stocks.ItemsSource = bag;
 
 
             #endregion
