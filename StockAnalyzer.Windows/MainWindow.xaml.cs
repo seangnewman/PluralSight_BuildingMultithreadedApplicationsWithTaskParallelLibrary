@@ -25,10 +25,10 @@ namespace StockAnalyzer.Windows
         }
 
 
-        private async void Search_Click(object sender, RoutedEventArgs e)
+        private  void Search_Click(object sender, RoutedEventArgs e)
         {
             BeforeLoadingStockData();
-
+            #region A Problem to Solve in Parallel
             var stocks = new Dictionary<string, IEnumerable<StockPrice>>
             {
                 { "MSFT", Generate("MSFT") },
@@ -37,6 +37,15 @@ namespace StockAnalyzer.Windows
                 { "AMAZ", Generate("AMAZ") }
             };
 
+            var msft = Calculate(stocks["MSFT"]);
+            var googl = Calculate(stocks["GOOGL"]);
+            var ps = Calculate(stocks["PS"]);
+            var amaz = Calculate(stocks["AMAZ"]);
+
+            Stocks.ItemsSource = new[] { msft, googl, ps, amaz };
+
+
+            #endregion
             AfterLoadingStockData();
         }
 
