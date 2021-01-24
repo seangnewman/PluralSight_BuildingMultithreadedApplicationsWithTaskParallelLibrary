@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace StockAnalyzer.AdvancedTopics
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            int total = 0;
+            // int total = 0;
             #region Working with Shared Variables
 
             ////for (int i = 0; i < 100; i++)
@@ -138,21 +139,46 @@ namespace StockAnalyzer.AdvancedTopics
 
             #region Thread Local and Async Local Variables
 
-            var options = new ParallelOptions { MaxDegreeOfParallelism = 2};
-            //creating thread local variables
-            // Data is reusing threads,  so cannot trust value
+            //var options = new ParallelOptions { MaxDegreeOfParallelism = 2};
+            ////creating thread local variables
+            //// Data is reusing threads,  so cannot trust value
 
-            Parallel.For(0, 100, options, (i) => {
-                var currentValue = threadLocal.Value;
-                threadLocal.Value = Compute(i);
-            });
-           
-            Parallel.For(0, 100, options, (i) => {
-                var currentValue = threadAsync.Value;
-                threadAsync.Value = Compute(i);
-            });
+            //Parallel.For(0, 100, options, (i) => {
+            //    var currentValue = threadLocal.Value;
+            //    threadLocal.Value = Compute(i);
+            //});
+
+            //Parallel.For(0, 100, options, (i) => {
+            //    var currentValue = threadAsync.Value;
+            //    threadAsync.Value = Compute(i);
+            //});
             #endregion
-            Console.WriteLine(total);
+
+            #region Creating a Parallel Language Integrated Query 
+
+            //var result = Enumerable.Range(0, 100)
+            //                                                .Select(Compute)
+            //                                                .Sum();
+
+
+
+
+              var result = Enumerable.Range(0, 100)
+                                                      .AsParallel()
+                                                      .AsOrdered()
+                                                      .Select(Compute)
+                                                      .Take(10);
+
+            //foreach (var item in result)
+            //{
+            //    Console.WriteLine(item);
+            //}
+            result.ForAll(Console.WriteLine);
+            //Console.WriteLine(result);
+
+            #endregion
+
+            //Console.WriteLine(total);
             Console.WriteLine($"It took : {stopWatch.ElapsedMilliseconds}ms to run");
         }
 

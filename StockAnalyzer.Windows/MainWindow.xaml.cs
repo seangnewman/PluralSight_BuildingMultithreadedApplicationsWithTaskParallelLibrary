@@ -288,6 +288,8 @@ namespace StockAnalyzer.Windows
 
             Stocks.ItemsSource = bag;
             #endregion
+
+
             AfterLoadingStockData();
         }
 
