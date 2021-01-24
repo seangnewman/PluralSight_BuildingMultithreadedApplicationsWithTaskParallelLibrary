@@ -11,6 +11,9 @@ namespace StockAnalyzer.AdvancedTopics
         static object syncRoot = new object();
         static object lock1 = new object();
         static object lock2 = new object();
+
+        static ThreadLocal<decimal?> threadLocal = new ThreadLocal<decimal?>();
+        static AsyncLocal<decimal?> threadAsync = new AsyncLocal<decimal?>();
         //static void Main(string[] args)
         static async Task Main(string[] args)
         {
@@ -111,26 +114,43 @@ namespace StockAnalyzer.AdvancedTopics
 
             #region ThreadLocak and Async Local Variables
 
-            var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(2000);
+            //var cancellationTokenSource = new CancellationTokenSource();
+            //cancellationTokenSource.CancelAfter(2000);
 
-            var parallelOptions = new ParallelOptions
-            {
-                CancellationToken = cancellationTokenSource.Token,
-                MaxDegreeOfParallelism = 1
-            };
-            try
-            {
-                Parallel.For(0, 100, parallelOptions, (i) => {
-                    Interlocked.Add(ref total, (int)Compute(i));
-                });
-            }
-            catch (Exception ex)
-            {
+            //var parallelOptions = new ParallelOptions
+            //{
+            //    CancellationToken = cancellationTokenSource.Token,
+            //    MaxDegreeOfParallelism = 1
+            //};
+            //try
+            //{
+            //    Parallel.For(0, 100, parallelOptions, (i) => {
+            //        Interlocked.Add(ref total, (int)Compute(i));
+            //    });
+            //}
+            //catch (Exception ex)
+            //{
 
-                Console.WriteLine("Cancellation Requested!"); ;
-            }
+            //    Console.WriteLine("Cancellation Requested!"); ;
+            //}
 
+            #endregion
+
+            #region Thread Local and Async Local Variables
+
+            var options = new ParallelOptions { MaxDegreeOfParallelism = 2};
+            //creating thread local variables
+            // Data is reusing threads,  so cannot trust value
+
+            Parallel.For(0, 100, options, (i) => {
+                var currentValue = threadLocal.Value;
+                threadLocal.Value = Compute(i);
+            });
+           
+            Parallel.For(0, 100, options, (i) => {
+                var currentValue = threadAsync.Value;
+                threadAsync.Value = Compute(i);
+            });
             #endregion
             Console.WriteLine(total);
             Console.WriteLine($"It took : {stopWatch.ElapsedMilliseconds}ms to run");
