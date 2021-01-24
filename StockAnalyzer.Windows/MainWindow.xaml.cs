@@ -15,7 +15,7 @@ namespace StockAnalyzer.Windows
 {
     public partial class MainWindow : Window
     {
-        private static string API_URL = "https://ps-async.fekberg.com/api/stocks";
+        private static readonly string API_URL = "https://ps-async.fekberg.com/api/stocks";
         private Stopwatch stopwatch = new Stopwatch();
         private Random random = new Random();
 
@@ -195,6 +195,54 @@ namespace StockAnalyzer.Windows
 
             #endregion
             #region Processing a Collection of Data in Parallel
+            //var stocks = new Dictionary<string, IEnumerable<StockPrice>>
+            //{
+            //    { "MSFT", Generate("MSFT") },
+            //    { "GOOGL", Generate("GOOGL") },
+            //    { "PS", Generate("PS") },
+            //    { "AMAZ", Generate("AMAZ") },
+            //    { "ABC", Generate("ABC") },
+            //    { "DEF", Generate("DEF") }
+            //};
+
+            ////Thread Safe that allows data to be added
+            //var bag = new ConcurrentBag<StockCalculation>();
+
+            //try
+            //{
+            //    var complete = await Task.Run(() =>
+            //    {
+            //        Parallel.For(0, stocks.Count , (i, state) =>
+            //        {
+            //            Dispatcher.Invoke(() => {
+            //                Notes.Text += stocks.ElementAt(i).Key + "\n";
+            //            });
+                        
+            //        });
+
+            //        var parallelLoopResult = Parallel.ForEach(stocks, (element) => {
+            //            var result = Calculate(element.Value);
+            //            bag.Add(result);
+            //            // To break from a parallel loop you must handle gracefully
+                         
+            //        });
+                    
+
+            //        return bag;
+            //    });
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    throw;
+            //}
+            //// Note, by using the task we have now reduced the number of threads available
+
+            //Stocks.ItemsSource = bag;
+
+            #endregion
+            #region Working with Shared Variables
+
             var stocks = new Dictionary<string, IEnumerable<StockPrice>>
             {
                 { "MSFT", Generate("MSFT") },
@@ -212,21 +260,21 @@ namespace StockAnalyzer.Windows
             {
                 var complete = await Task.Run(() =>
                 {
-                    Parallel.For(0, stocks.Count , (i, state) =>
+                    Parallel.For(0, stocks.Count, (i, state) =>
                     {
                         Dispatcher.Invoke(() => {
                             Notes.Text += stocks.ElementAt(i).Key + "\n";
                         });
-                        
+
                     });
 
                     var parallelLoopResult = Parallel.ForEach(stocks, (element) => {
                         var result = Calculate(element.Value);
                         bag.Add(result);
                         // To break from a parallel loop you must handle gracefully
-                         
+
                     });
-                    
+
 
                     return bag;
                 });
@@ -239,7 +287,6 @@ namespace StockAnalyzer.Windows
             // Note, by using the task we have now reduced the number of threads available
 
             Stocks.ItemsSource = bag;
-
             #endregion
             AfterLoadingStockData();
         }
