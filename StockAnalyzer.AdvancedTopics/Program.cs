@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StockAnalyzer.AdvancedTopics
@@ -13,23 +14,36 @@ namespace StockAnalyzer.AdvancedTopics
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            decimal total = 0;
-            //for (int i = 0; i < 100; i++)
-            //{
-            //    total += Compute(i);
-            //}
+            int total = 0;
+            #region Working with Shared Variables
+            
+            ////for (int i = 0; i < 100; i++)
+            ////{
+            ////    total += Compute(i);
+            ////}
+
+            //Parallel.For(0, 100, (i) => {
+            //    var result = Compute(i);
+            //    // lock (syncroot) insures only one thread can access the variable 
+            //    lock (syncRoot)
+            //    {
+            //        // Only lock for short, atomic operations
+            //        total += result;
+            //    }
+
+            //});
+
+            #endregion
+
+            #region Performing Atomic Operations
 
             Parallel.For(0, 100, (i) => {
                 var result = Compute(i);
-                // lock (syncroot) insures only one thread can access the variable 
-                lock (syncRoot)
-                {
-                    // Only lock for short, atomic operations
-                    total += result;
-                }
-               
+                Interlocked.Add(ref total, (int)result);  // Interlocked only works with integers, we will lose some data in the conversion
+  
             });
 
+            #endregion 
             Console.WriteLine(total);
             Console.WriteLine($"It took : {stopWatch.ElapsedMilliseconds}ms to run");
         }
