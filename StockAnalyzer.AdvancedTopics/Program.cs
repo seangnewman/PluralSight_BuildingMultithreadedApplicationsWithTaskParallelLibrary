@@ -39,6 +39,8 @@ namespace StockAnalyzer.AdvancedTopics
 
             Parallel.For(0, 100, (i) => {
                 var result = Compute(i);
+
+
                 Interlocked.Add(ref total, (int)result);  // Interlocked only works with integers, we will lose some data in the conversion
   
             });
