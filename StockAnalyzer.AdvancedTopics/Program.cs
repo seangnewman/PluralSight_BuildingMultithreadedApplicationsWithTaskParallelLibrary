@@ -9,14 +9,17 @@ namespace StockAnalyzer.AdvancedTopics
     {
 
         static object syncRoot = new object();
-        static void Main(string[] args)
+        static object lock1 = new object();
+        static object lock2 = new object();
+        //static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
             int total = 0;
             #region Working with Shared Variables
-            
+
             ////for (int i = 0; i < 100; i++)
             ////{
             ////    total += Compute(i);
@@ -37,15 +40,50 @@ namespace StockAnalyzer.AdvancedTopics
 
             #region Performing Atomic Operations
 
-            Parallel.For(0, 100, (i) => {
-                var result = Compute(i);
+            //Parallel.For(0, 100, (i) => {
+            //    var result = Compute(i);
 
 
-                Interlocked.Add(ref total, (int)result);  // Interlocked only works with integers, we will lose some data in the conversion
-  
+            //    Interlocked.Add(ref total, (int)result);  // Interlocked only works with integers, we will lose some data in the conversion
+
+            //});
+
+            #endregion
+
+            #region Deadlocks and Nested Locks
+            // Do not share lock objects for multiple resource
+            // Use on lock object for each shared resource
+            // Give lock object a meaningfull name
+            // Do not user these types!  stirng, type instance (typeof())  or this
+            //     
+
+            // Most common situation is nested locks
+            var t1 = Task.Run( () => {
+                lock (lock1)
+                {
+                    Thread.Sleep(1);
+                }
+
+                lock (lock2)         
+                {
+                    Console.WriteLine("Hello!");
+                }
+            });
+            var t2 = Task.Run(() => {
+                // This will result in deadlock,  t1 is watiing for t2... t2 is waiting for t1
+                lock (lock2)
+                {
+                    Thread.Sleep(1);
+                }
+
+                lock (lock1)
+                {
+                    Console.WriteLine("World!");
+                }
             });
 
-            #endregion 
+            await Task.WhenAll(t1, t2);
+            #endregion
             Console.WriteLine(total);
             Console.WriteLine($"It took : {stopWatch.ElapsedMilliseconds}ms to run");
         }
