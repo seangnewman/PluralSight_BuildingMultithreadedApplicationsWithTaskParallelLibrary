@@ -58,31 +58,79 @@ namespace StockAnalyzer.AdvancedTopics
             //     
 
             // Most common situation is nested locks
-            var t1 = Task.Run( () => {
-                lock (lock1)
-                {
-                    Thread.Sleep(1);
-                }
+            //var t1 = Task.Run( () => {
+            //    lock (lock1)
+            //    {
+            //        Thread.Sleep(1);
+            //    }
 
-                lock (lock2)         
-                {
-                    Console.WriteLine("Hello!");
-                }
-            });
-            var t2 = Task.Run(() => {
-                // This will result in deadlock,  t1 is watiing for t2... t2 is waiting for t1
-                lock (lock2)
-                {
-                    Thread.Sleep(1);
-                }
+            //    lock (lock2)         
+            //    {
+            //        Console.WriteLine("Hello!");
+            //    }
+            //});
+            //var t2 = Task.Run(() => {
+            //    // This will result in deadlock,  t1 is watiing for t2... t2 is waiting for t1
+            //    lock (lock2)
+            //    {
+            //        Thread.Sleep(1);
+            //    }
 
-                lock (lock1)
-                {
-                    Console.WriteLine("World!");
-                }
-            });
+            //    lock (lock1)
+            //    {
+            //        Console.WriteLine("World!");
+            //    }
+            //});
 
-            await Task.WhenAll(t1, t2);
+            //await Task.WhenAll(t1, t2);
+            #endregion
+
+            #region Cancel Parallel Operations
+
+            //var cancellationTokenSource = new CancellationTokenSource();
+            //cancellationTokenSource.CancelAfter(2000);
+
+            //var parallelOptions = new ParallelOptions
+            //{
+            //    CancellationToken = cancellationTokenSource.Token,
+            //    MaxDegreeOfParallelism = 1
+            //};
+            //try
+            //{
+            //   Parallel.For(0, 100, parallelOptions, (i) => {
+            //        Interlocked.Add(ref total, (int)Compute(i));
+            //    });
+            //}
+            //catch (Exception ex )
+            //{
+
+            //    Console.WriteLine("Cancellation Requested!" ); ;
+            //}
+
+            #endregion
+
+            #region ThreadLocak and Async Local Variables
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(2000);
+
+            var parallelOptions = new ParallelOptions
+            {
+                CancellationToken = cancellationTokenSource.Token,
+                MaxDegreeOfParallelism = 1
+            };
+            try
+            {
+                Parallel.For(0, 100, parallelOptions, (i) => {
+                    Interlocked.Add(ref total, (int)Compute(i));
+                });
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine("Cancellation Requested!"); ;
+            }
+
             #endregion
             Console.WriteLine(total);
             Console.WriteLine($"It took : {stopWatch.ElapsedMilliseconds}ms to run");
